@@ -28,6 +28,28 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
     }
   };
 
+  // Handle tab key to insert tabs instead of changing focus
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const tabChar = '  '; // 2 spaces instead of tab for better compatibility
+
+      // Insert tab at cursor position
+      const newValue = value.substring(0, start) + tabChar + value.substring(end);
+      onChange(newValue);
+
+      // Move cursor to after the inserted tab
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + tabChar.length;
+      }, 0);
+    }
+  };
+
   // Auto-resize textarea
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -77,6 +99,7 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
         ref={textareaRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         onScroll={handleScroll}
