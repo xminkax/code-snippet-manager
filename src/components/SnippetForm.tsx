@@ -40,8 +40,8 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
       setCode(editingSnippet.code || "");
       setLanguage(editingSnippet.language || "");
       setCategory(editingSnippet.category || "");
-    } else {
-      // Reset form for new snippet
+    } else if (open && !editingSnippet) {
+      // Only reset form when opening for new snippet creation
       setTitle("");
       setDescription("");
       setCode("");
