@@ -67,13 +67,23 @@ export default {
 					border: 'hsl(var(--code-border))'
 				}
 			},
+			fontFamily: {
+				'retro': ['Orbitron', 'sans-serif'],
+				'terminal': ['VT323', 'monospace'],
+				'mono': ['VT323', 'Courier New', 'monospace'],
+			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
-				'gradient-card': 'var(--gradient-card)'
+				'gradient-card': 'var(--gradient-card)',
+				'gradient-retro': 'var(--gradient-retro)',
+				'gradient-neon': 'var(--gradient-neon)',
 			},
 			boxShadow: {
 				'elegant': 'var(--shadow-elegant)',
-				'card': 'var(--shadow-card)'
+				'card': 'var(--shadow-card)',
+				'neon': 'var(--shadow-neon)',
+				'cyan': 'var(--shadow-cyan)',
+				'yellow': 'var(--shadow-yellow)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

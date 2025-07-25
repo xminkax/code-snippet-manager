@@ -47,31 +47,32 @@ export const SnippetCard = ({ snippet, onEdit, onDelete }: SnippetCardProps) => 
   };
 
   return (
-    <Card className="bg-gradient-card border-border shadow-card hover:shadow-elegant transition-all duration-300 group">
-      <CardHeader className="pb-3">
+    <Card className="retro-card group relative overflow-hidden">
+      <div className="absolute inset-0 opacity-20 bg-gradient-neon"></div>
+      <CardHeader className="pb-3 relative z-10">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-card-foreground truncate group-hover:text-primary transition-colors">
-              {snippet.title}
+            <h3 className="font-terminal text-lg text-primary font-bold truncate group-hover:text-secondary transition-colors uppercase tracking-wide">
+              &gt; {snippet.title}.exe
             </h3>
             {snippet.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {snippet.description}
+              <p className="text-sm text-secondary mt-1 line-clamp-2 font-terminal">
+                // {snippet.description}
               </p>
             )}
           </div>
           <div className="flex gap-2">
-            <Badge variant="secondary" className="text-xs font-medium">
-              {snippet.language}
+            <Badge variant="secondary" className="text-xs font-terminal uppercase tracking-wider bg-primary text-primary-foreground border-primary">
+              [{snippet.language}]
             </Badge>
-            <Badge variant="outline" className="text-xs">
-              {snippet.category}
+            <Badge variant="outline" className="text-xs font-terminal uppercase tracking-wider border-accent text-accent">
+              [{snippet.category}]
             </Badge>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pb-3">
+      <CardContent className="pb-3 relative z-10">
         <div className="relative">
           <SyntaxHighlighter
             language={snippet.language.toLowerCase()}
@@ -80,14 +81,16 @@ export const SnippetCard = ({ snippet, onEdit, onDelete }: SnippetCardProps) => 
               margin: 0,
               borderRadius: 'var(--radius)',
               background: 'hsl(var(--code-bg))',
-              border: '1px solid hsl(var(--code-border))',
+              border: '2px solid hsl(var(--code-border))',
               fontSize: '0.875rem',
               maxHeight: '200px',
               overflow: 'auto',
+              boxShadow: 'inset 0 0 10px hsl(var(--primary) / 0.2)',
             }}
             codeTagProps={{
               style: {
-                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+                fontFamily: 'VT323, Courier New, monospace',
+                fontSize: '1rem',
               }
             }}
           >
@@ -97,24 +100,24 @@ export const SnippetCard = ({ snippet, onEdit, onDelete }: SnippetCardProps) => 
           <Button
             size="sm"
             variant="secondary"
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity retro-button text-xs font-terminal"
             onClick={copyToClipboard}
           >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           </Button>
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0 flex justify-between items-center">
-        <span className="text-xs text-muted-foreground">
-          {snippet.updatedAt.toLocaleDateString()}
+      <CardFooter className="pt-0 flex justify-between items-center relative z-10">
+        <span className="text-xs text-secondary font-terminal uppercase tracking-wider">
+          &gt; {snippet.updatedAt.toLocaleDateString()}
         </span>
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => onEdit(snippet)}
-            className="h-8 w-8 p-0 hover:bg-secondary"
+            className="h-8 w-8 p-0 hover:bg-secondary hover:text-secondary-foreground transition-all hover:shadow-cyan border border-transparent hover:border-secondary"
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -122,7 +125,7 @@ export const SnippetCard = ({ snippet, onEdit, onDelete }: SnippetCardProps) => 
             size="sm"
             variant="ghost"
             onClick={() => onDelete(snippet.id)}
-            className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+            className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground transition-all hover:shadow-yellow border border-transparent hover:border-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </Button>

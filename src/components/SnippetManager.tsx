@@ -185,64 +185,66 @@ export const SnippetManager = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-6 grid-pattern relative">
+      <div className="scan-line"></div>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Code className="h-5 w-5 text-primary-foreground" />
+            <div className="w-12 h-12 bg-gradient-neon rounded border-2 border-primary flex items-center justify-center relative">
+              <Code className="h-6 w-6 text-primary-foreground" style={{ filter: 'drop-shadow(0 0 5px currentColor)' }} />
+              <div className="absolute inset-0 bg-gradient-neon rounded opacity-50 animate-pulse"></div>
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Code Snippet Manager
+              <h1 className="text-4xl font-bold retro-title bg-gradient-retro bg-clip-text text-transparent">
+                &gt; CODE_SNIPPETS.EXE
               </h1>
-              <p className="text-muted-foreground">
-                Organize and access your code snippets efficiently
+              <p className="retro-subtitle text-secondary">
+                [TERMINAL MODE] - Organize and access your code snippets
               </p>
             </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <Button onClick={handleNewSnippet} className="gap-2">
+            <Button onClick={handleNewSnippet} className="retro-button gap-2 font-terminal text-sm">
               <Plus className="h-4 w-4" />
-              New Snippet
+              [NEW_SNIPPET.CMD]
             </Button>
             
             <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full sm:w-auto">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-secondary" style={{ filter: 'drop-shadow(0 0 3px currentColor)' }} />
                 <Input
-                  placeholder="Search snippets..."
+                  placeholder="> SEARCH_QUERY..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="retro-input pl-9 font-terminal"
                 />
               </div>
               
               <div className="flex gap-2">
                 <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="h-4 w-4 mr-2" />
+                  <SelectTrigger className="retro-input w-[160px] font-terminal">
+                    <Filter className="h-4 w-4 mr-2 text-accent" style={{ filter: 'drop-shadow(0 0 3px currentColor)' }} />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="retro-card font-terminal">
                     {languages.map(lang => (
-                      <SelectItem key={lang} value={lang}>
-                        {lang === "all" ? "All Languages" : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                      <SelectItem key={lang} value={lang} className="font-terminal">
+                        {lang === "all" ? "[ALL_LANG]" : `[${lang.toUpperCase()}]`}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[140px]">
+                  <SelectTrigger className="retro-input w-[160px] font-terminal">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="retro-card font-terminal">
                     {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat === "all" ? "All Categories" : cat}
+                      <SelectItem key={cat} value={cat} className="font-terminal">
+                        {cat === "all" ? "[ALL_CAT]" : `[${cat.toUpperCase()}]`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -254,44 +256,44 @@ export const SnippetManager = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="text-2xl font-bold text-card-foreground">{snippets.length}</div>
-            <div className="text-sm text-muted-foreground">Total Snippets</div>
+          <div className="retro-card p-4 border-primary">
+            <div className="text-3xl font-bold text-primary font-terminal" style={{ textShadow: '0 0 10px currentColor' }}>{snippets.length}</div>
+            <div className="text-sm text-secondary font-terminal uppercase tracking-wider">&gt; Total_Snippets</div>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="text-2xl font-bold text-card-foreground">{languages.length - 1}</div>
-            <div className="text-sm text-muted-foreground">Languages</div>
+          <div className="retro-card p-4 border-secondary">
+            <div className="text-3xl font-bold text-secondary font-terminal" style={{ textShadow: '0 0 10px currentColor' }}>{languages.length - 1}</div>
+            <div className="text-sm text-accent font-terminal uppercase tracking-wider">&gt; Languages</div>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="text-2xl font-bold text-card-foreground">{categories.length - 1}</div>
-            <div className="text-sm text-muted-foreground">Categories</div>
+          <div className="retro-card p-4 border-accent">
+            <div className="text-3xl font-bold text-accent font-terminal" style={{ textShadow: '0 0 10px currentColor' }}>{categories.length - 1}</div>
+            <div className="text-sm text-primary font-terminal uppercase tracking-wider">&gt; Categories</div>
           </div>
         </div>
 
         {/* Snippets Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
-            <h3 className="text-lg font-semibold text-card-foreground mb-2">Loading snippets...</h3>
-            <p className="text-muted-foreground">Please wait while we fetch your code snippets.</p>
+            <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
+            <h3 className="text-lg font-semibold text-primary mb-2 font-terminal uppercase tracking-wider">[LOADING_SNIPPETS.EXE]</h3>
+            <p className="text-secondary font-terminal">Please wait while we fetch your code snippets...</p>
           </div>
         ) : filteredSnippets.length === 0 ? (
           <div className="text-center py-12">
-            <Code className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-card-foreground mb-2">
+            <Code className="h-12 w-12 text-primary mx-auto mb-4" style={{ filter: 'drop-shadow(0 0 10px currentColor)' }} />
+            <h3 className="text-lg font-semibold text-primary mb-2 font-terminal uppercase tracking-wider">
               {searchTerm || selectedLanguage !== "all" || selectedCategory !== "all" 
-                ? "No snippets found" 
-                : "No snippets yet"}
+                ? "[NO_MATCH_FOUND]" 
+                : "[EMPTY_DATABASE]"}
             </h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-secondary mb-4 font-terminal">
               {searchTerm || selectedLanguage !== "all" || selectedCategory !== "all"
-                ? "Try adjusting your search or filters"
-                : "Create your first code snippet to get started"}
+                ? "> Try adjusting your search parameters"
+                : "> Initialize database with first code snippet"}
             </p>
             {(!searchTerm && selectedLanguage === "all" && selectedCategory === "all") && (
-              <Button onClick={handleNewSnippet} className="gap-2">
+              <Button onClick={handleNewSnippet} className="retro-button gap-2 font-terminal">
                 <Plus className="h-4 w-4" />
-                Create First Snippet
+                [CREATE_FIRST.CMD]
               </Button>
             )}
           </div>
