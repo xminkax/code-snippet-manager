@@ -8,57 +8,53 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Retro dark theme - 80s computer terminal vibes */
-    --background: 240 100% 2%;
-    --foreground: 120 100% 75%;
+    /* Code snippet manager dark theme */
+    --background: 218 23% 3%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 100% 4%;
-    --card-foreground: 120 100% 75%;
+    --card: 220 23% 6%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 240 100% 4%;
-    --popover-foreground: 120 100% 75%;
+    --popover: 220 23% 6%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 300 100% 70%;
-    --primary-foreground: 240 100% 2%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 23% 6%;
 
-    --secondary: 180 100% 50%;
-    --secondary-foreground: 240 100% 2%;
+    --secondary: 220 23% 11%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 100% 6%;
-    --muted-foreground: 120 50% 60%;
+    --muted: 220 23% 8%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 60 100% 70%;
-    --accent-foreground: 240 100% 2%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 100% 70%;
-    --destructive-foreground: 240 100% 2%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 120 100% 25%;
-    --input: 240 100% 6%;
-    --ring: 300 100% 70%;
+    --border: 220 23% 11%;
+    --input: 220 23% 11%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.125rem;
+    --radius: 0.75rem;
 
-    /* Retro code colors */
-    --code-bg: 240 100% 3%;
-    --code-border: 120 100% 30%;
-    --syntax-comment: 120 50% 50%;
-    --syntax-keyword: 300 100% 70%;
-    --syntax-string: 60 100% 70%;
-    --syntax-number: 180 100% 70%;
-    --syntax-function: 30 100% 70%;
+    /* Code snippet specific */
+    --code-bg: 220 23% 4%;
+    --code-border: 220 23% 12%;
+    --syntax-comment: 215 14% 54%;
+    --syntax-keyword: 262 83% 58%;
+    --syntax-string: 142 76% 36%;
+    --syntax-number: 217 91% 60%;
+    --syntax-function: 47 100% 67%;
 
-    /* Retro gradients */
-    --gradient-primary: linear-gradient(45deg, hsl(300 100% 70%), hsl(180 100% 50%));
-    --gradient-retro: linear-gradient(135deg, hsl(300 100% 70%), hsl(60 100% 70%), hsl(180 100% 50%));
-    --gradient-card: linear-gradient(145deg, hsl(240 100% 4%), hsl(240 100% 6%));
-    --gradient-neon: linear-gradient(90deg, hsl(300 100% 70%), hsl(180 100% 50%));
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 83% 58%));
+    --gradient-card: linear-gradient(145deg, hsl(220 23% 6%), hsl(220 23% 8%));
 
-    /* Retro shadows and glows */
-    --shadow-neon: 0 0 20px hsl(300 100% 70% / 0.5), 0 0 40px hsl(300 100% 70% / 0.3);
-    --shadow-cyan: 0 0 20px hsl(180 100% 50% / 0.5), 0 0 40px hsl(180 100% 50% / 0.3);
-    --shadow-yellow: 0 0 20px hsl(60 100% 70% / 0.5), 0 0 40px hsl(60 100% 70% / 0.3);
-    --shadow-card: 0 4px 20px hsl(240 100% 0% / 0.8), 0 0 0 1px hsl(120 100% 25%);
+    /* Shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(217 91% 60% / 0.3);
+    --shadow-card: 0 4px 20px -4px hsl(220 23% 0% / 0.5);
 
     --sidebar-background: 220 23% 4%;
     --sidebar-foreground: 210 40% 98%;
@@ -71,36 +67,35 @@ All colors MUST be HSL.
   }
 
   .light {
-    /* Retro light theme - vintage computer aesthetic */
-    --background: 45 100% 95%;
-    --foreground: 240 100% 15%;
-    --card: 45 100% 98%;
-    --card-foreground: 240 100% 15%;
-    --popover: 45 100% 98%;
-    --popover-foreground: 240 100% 15%;
-    --primary: 300 100% 50%;
-    --primary-foreground: 45 100% 95%;
-    --secondary: 180 100% 30%;
-    --secondary-foreground: 45 100% 95%;
-    --muted: 45 50% 90%;
-    --muted-foreground: 240 50% 40%;
-    --accent: 60 100% 50%;
-    --accent-foreground: 240 100% 15%;
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 45 100% 95%;
-    --border: 240 50% 80%;
-    --input: 45 50% 92%;
-    --ring: 300 100% 50%;
-    --code-bg: 45 100% 97%;
-    --code-border: 240 50% 85%;
-    --sidebar-background: 45 100% 96%;
-    --sidebar-foreground: 240 100% 15%;
-    --sidebar-primary: 300 100% 50%;
-    --sidebar-primary-foreground: 45 100% 95%;
-    --sidebar-accent: 45 50% 92%;
-    --sidebar-accent-foreground: 240 100% 15%;
-    --sidebar-border: 240 50% 85%;
-    --sidebar-ring: 300 100% 50%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%;
+    --code-bg: 210 40% 98%;
+    --code-border: 214.3 31.8% 91.4%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 
@@ -110,108 +105,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground font-mono;
-    background-image: 
-      radial-gradient(circle at 2px 2px, hsl(120 100% 25% / 0.3) 1px, transparent 0);
-    background-size: 40px 40px;
-  }
-
-  /* Retro text effects */
-  .retro-title {
-    font-family: 'Orbitron', monospace;
-    font-weight: 900;
-    text-shadow: 
-      0 0 5px currentColor,
-      0 0 10px currentColor,
-      0 0 15px currentColor;
-    animation: pulse-glow 2s ease-in-out infinite alternate;
-  }
-
-  .retro-subtitle {
-    font-family: 'VT323', monospace;
-    font-size: 1.2rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .retro-card {
-    position: relative;
-    background: var(--gradient-card);
-    border: 2px solid hsl(var(--border));
-    box-shadow: var(--shadow-card);
-    transition: all 0.3s ease;
-  }
-
-  .retro-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-neon);
-  }
-
-  .retro-button {
-    position: relative;
-    background: var(--gradient-neon);
-    border: 2px solid hsl(var(--primary));
-    text-transform: uppercase;
-    font-weight: bold;
-    letter-spacing: 0.05em;
-    transition: all 0.3s ease;
-  }
-
-  .retro-button:hover {
-    box-shadow: var(--shadow-neon);
-    transform: translateY(-1px);
-  }
-
-  .retro-input {
-    background: hsl(var(--input));
-    border: 2px solid hsl(var(--border));
-    font-family: 'VT323', monospace;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-  }
-
-  .retro-input:focus {
-    border-color: hsl(var(--primary));
-    box-shadow: var(--shadow-neon);
-  }
-
-  .grid-pattern {
-    background-image: 
-      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-
-  /* Animations */
-  @keyframes pulse-glow {
-    from {
-      text-shadow: 
-        0 0 5px currentColor,
-        0 0 10px currentColor,
-        0 0 15px currentColor;
-    }
-    to {
-      text-shadow: 
-        0 0 10px currentColor,
-        0 0 20px currentColor,
-        0 0 30px currentColor;
-    }
-  }
-
-  @keyframes scan-line {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
-  }
-
-  .scan-line {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
-    animation: scan-line 3s linear infinite;
-    pointer-events: none;
-    z-index: 1000;
+    @apply bg-background text-foreground;
   }
 }
