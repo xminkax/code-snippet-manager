@@ -88,7 +88,7 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
         )}
         style={{ 
           zIndex: 2,
-          color: isFocused ? 'hsl(var(--foreground))' : 'transparent',
+          color: 'transparent',
           caretColor: 'hsl(var(--foreground))',
         }}
         spellCheck={false}
