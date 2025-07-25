@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CodeEditor } from "./CodeEditor";
 import { Snippet } from "./SnippetCard";
 
 interface SnippetFormProps {
@@ -141,13 +141,12 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
 
           <div className="space-y-2">
             <Label htmlFor="code">Code *</Label>
-            <Textarea
-              id="code"
+            <CodeEditor
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Paste your code here..."
-              className="min-h-[300px] font-mono text-sm"
-              required
+              onChange={setCode}
+              language={language || 'text'}
+              placeholder="Enter your code here..."
+              className="min-h-[300px]"
             />
           </div>
 
