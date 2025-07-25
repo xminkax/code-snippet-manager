@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,11 +26,29 @@ const CATEGORIES = [
 ];
 
 export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: SnippetFormProps) => {
-  const [title, setTitle] = useState(editingSnippet?.title || "");
-  const [description, setDescription] = useState(editingSnippet?.description || "");
-  const [code, setCode] = useState(editingSnippet?.code || "");
-  const [language, setLanguage] = useState(editingSnippet?.language || "");
-  const [category, setCategory] = useState(editingSnippet?.category || "");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [code, setCode] = useState("");
+  const [language, setLanguage] = useState("");
+  const [category, setCategory] = useState("");
+
+  // Update form fields when editingSnippet changes
+  useEffect(() => {
+    if (editingSnippet) {
+      setTitle(editingSnippet.title || "");
+      setDescription(editingSnippet.description || "");
+      setCode(editingSnippet.code || "");
+      setLanguage(editingSnippet.language || "");
+      setCategory(editingSnippet.category || "");
+    } else {
+      // Reset form for new snippet
+      setTitle("");
+      setDescription("");
+      setCode("");
+      setLanguage("");
+      setCategory("");
+    }
+  }, [editingSnippet, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +78,9 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
           <DialogTitle className="text-xl font-semibold bg-gradient-primary bg-clip-text text-transparent">
             {editingSnippet ? "Edit Snippet" : "Create New Snippet"}
           </DialogTitle>
+          <DialogDescription>
+            {editingSnippet ? "Update your existing code snippet." : "Create a new code snippet to save for later use."}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
