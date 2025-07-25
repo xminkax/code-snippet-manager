@@ -1,88 +1,60 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Code, Filter } from "lucide-react";
+import { Plus, Search, Code, Filter, Loader2 } from "lucide-react";
 import { SnippetCard, Snippet } from "./SnippetCard";
 import { SnippetForm } from "./SnippetForm";
 import { useToast } from "@/hooks/use-toast";
-
-// Sample data
-const SAMPLE_SNIPPETS: Snippet[] = [
-  {
-    id: "1",
-    title: "React useState Hook",
-    description: "Basic useState hook example with counter",
-    code: `import { useState } from 'react';
-
-function Counter() {
-  const [count, setCount] = useState(0);
-
-  return (
-    <div>
-      <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>
-        Increment
-      </button>
-    </div>
-  );
-}`,
-    language: "javascript",
-    category: "Frontend",
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    title: "Python List Comprehension",
-    description: "Filter and transform lists efficiently",
-    code: `# Filter even numbers and square them
-numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-squared_evens = [x**2 for x in numbers if x % 2 == 0]
-print(squared_evens)  # [4, 16, 36, 64, 100]
-
-# Create dictionary from two lists
-keys = ['a', 'b', 'c']
-values = [1, 2, 3]
-result = {k: v for k, v in zip(keys, values)}`,
-    language: "python",
-    category: "Algorithm",
-    createdAt: new Date("2024-01-10"),
-    updatedAt: new Date("2024-01-12"),
-  },
-  {
-    id: "3",
-    title: "CSS Flexbox Center",
-    description: "Perfect centering with flexbox",
-    code: `.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
-.centered-content {
-  /* Your content styles */
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}`,
-    language: "css",
-    category: "Frontend",
-    createdAt: new Date("2024-01-08"),
-    updatedAt: new Date("2024-01-08"),
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 export const SnippetManager = () => {
-  const [snippets, setSnippets] = useState<Snippet[]>(SAMPLE_SNIPPETS);
+  const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Fetch snippets from Supabase on component mount
+  useEffect(() => {
+    fetchSnippets();
+  }, []);
+
+  const fetchSnippets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('snippets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedSnippets: Snippet[] = data.map(snippet => ({
+        id: snippet.id,
+        title: snippet.title,
+        description: snippet.description,
+        code: snippet.code,
+        language: snippet.language,
+        category: snippet.category,
+        createdAt: new Date(snippet.created_at),
+        updatedAt: new Date(snippet.updated_at),
+      }));
+
+      setSnippets(formattedSnippets);
+    } catch (error) {
+      console.error('Error fetching snippets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load snippets. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const languages = useMemo(() => {
     const langs = Array.from(new Set(snippets.map(s => s.language))).sort();
@@ -108,31 +80,72 @@ export const SnippetManager = () => {
     });
   }, [snippets, searchTerm, selectedLanguage, selectedCategory]);
 
-  const handleSave = (snippetData: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => {
-    if (editingSnippet) {
-      // Update existing snippet
-      setSnippets(prev => prev.map(s => 
-        s.id === editingSnippet.id 
-          ? { ...s, ...snippetData, updatedAt: new Date() }
-          : s
-      ));
+  const handleSave = async (snippetData: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      if (editingSnippet) {
+        // Update existing snippet
+        const { error } = await supabase
+          .from('snippets')
+          .update({
+            title: snippetData.title,
+            description: snippetData.description,
+            code: snippetData.code,
+            language: snippetData.language,
+            category: snippetData.category,
+          })
+          .eq('id', editingSnippet.id);
+
+        if (error) throw error;
+
+        setSnippets(prev => prev.map(s => 
+          s.id === editingSnippet.id 
+            ? { ...s, ...snippetData, updatedAt: new Date() }
+            : s
+        ));
+        toast({
+          title: "Snippet updated",
+          description: "Your code snippet has been updated successfully.",
+        });
+        setEditingSnippet(null);
+      } else {
+        // Create new snippet
+        const { data, error } = await supabase
+          .from('snippets')
+          .insert([{
+            title: snippetData.title,
+            description: snippetData.description,
+            code: snippetData.code,
+            language: snippetData.language,
+            category: snippetData.category,
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newSnippet: Snippet = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          code: data.code,
+          language: data.language,
+          category: data.category,
+          createdAt: new Date(data.created_at),
+          updatedAt: new Date(data.updated_at),
+        };
+
+        setSnippets(prev => [newSnippet, ...prev]);
+        toast({
+          title: "Snippet created",
+          description: "Your new code snippet has been saved.",
+        });
+      }
+    } catch (error) {
+      console.error('Error saving snippet:', error);
       toast({
-        title: "Snippet updated",
-        description: "Your code snippet has been updated successfully.",
-      });
-      setEditingSnippet(null);
-    } else {
-      // Create new snippet
-      const newSnippet: Snippet = {
-        id: Date.now().toString(),
-        ...snippetData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setSnippets(prev => [newSnippet, ...prev]);
-      toast({
-        title: "Snippet created",
-        description: "Your new code snippet has been saved.",
+        title: "Error",
+        description: "Failed to save snippet. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -142,12 +155,28 @@ export const SnippetManager = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setSnippets(prev => prev.filter(s => s.id !== id));
-    toast({
-      title: "Snippet deleted",
-      description: "The code snippet has been removed.",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('snippets')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSnippets(prev => prev.filter(s => s.id !== id));
+      toast({
+        title: "Snippet deleted",
+        description: "The code snippet has been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting snippet:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete snippet. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNewSnippet = () => {
@@ -240,7 +269,13 @@ export const SnippetManager = () => {
         </div>
 
         {/* Snippets Grid */}
-        {filteredSnippets.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <Loader2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+            <h3 className="text-lg font-semibold text-card-foreground mb-2">Loading snippets...</h3>
+            <p className="text-muted-foreground">Please wait while we fetch your code snippets.</p>
+          </div>
+        ) : filteredSnippets.length === 0 ? (
           <div className="text-center py-12">
             <Code className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-card-foreground mb-2">
