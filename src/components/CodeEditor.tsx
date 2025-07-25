@@ -82,14 +82,16 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
         onScroll={handleScroll}
         placeholder={placeholder}
         className={cn(
-          "relative w-full resize-none bg-transparent p-3 text-transparent caret-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-          "font-mono text-sm leading-6 min-h-[300px]",
-          "selection:bg-primary/20"
+          "relative w-full resize-none bg-transparent p-3 font-mono text-sm leading-6 min-h-[300px]",
+          "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+          "placeholder:text-muted-foreground"
         )}
         style={{ 
           zIndex: 2,
           color: 'transparent',
           caretColor: 'hsl(var(--foreground))',
+          WebkitTextFillColor: 'transparent',
+          textShadow: 'none',
         }}
         spellCheck={false}
         autoComplete="off"
