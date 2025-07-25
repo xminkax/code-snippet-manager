@@ -24,7 +24,7 @@ const Index = () => {
   }
 
   if (!user) {
-    //return null; // Will redirect to auth
+    return null; // Will redirect to auth
   }
 
   return (
