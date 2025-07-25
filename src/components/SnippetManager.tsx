@@ -204,9 +204,13 @@ export const SnippetManager = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <Button onClick={handleNewSnippet} className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Snippet
+            <Button 
+              onClick={handleNewSnippet} 
+              className="gap-2 relative overflow-hidden bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-secondary transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <Plus className="h-4 w-4 relative z-10" />
+              <span className="relative z-10">New Snippet</span>
             </Button>
             
             <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full sm:w-auto">
@@ -289,9 +293,13 @@ export const SnippetManager = () => {
                 : "Create your first code snippet to get started"}
             </p>
             {(!searchTerm && selectedLanguage === "all" && selectedCategory === "all") && (
-              <Button onClick={handleNewSnippet} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Create First Snippet
+              <Button 
+                onClick={handleNewSnippet} 
+                className="gap-2 relative overflow-hidden bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-secondary transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/25 group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                <Plus className="h-4 w-4 relative z-10" />
+                <span className="relative z-10">Create First Snippet</span>
               </Button>
             )}
           </div>
