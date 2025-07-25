@@ -83,10 +83,15 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
             lineHeight: '1.5',
             minHeight: '300px',
             overflow: 'hidden',
+            whiteSpace: 'pre',
+            wordWrap: 'normal',
+            tabSize: 2,
           }}
           codeTagProps={{
             style: {
-              fontFamily: 'inherit',
+              fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              fontSize: '14px',
+              lineHeight: '1.5',
             }
           }}
         >
@@ -105,7 +110,7 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
         onScroll={handleScroll}
         placeholder={placeholder}
         className={cn(
-          "relative w-full resize-none bg-transparent p-3 font-mono text-sm leading-6 min-h-[300px]",
+          "relative w-full resize-none bg-transparent min-h-[300px]",
           "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
           "placeholder:text-muted-foreground"
         )}
@@ -115,6 +120,15 @@ export const CodeEditor = ({ value, onChange, language, placeholder = "Enter you
           caretColor: 'hsl(var(--foreground))',
           WebkitTextFillColor: 'transparent',
           textShadow: 'none',
+          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+          fontSize: '14px',
+          lineHeight: '1.5',
+          padding: '12px',
+          margin: 0,
+          border: 'none',
+          whiteSpace: 'pre',
+          wordWrap: 'normal',
+          tabSize: 2,
         }}
         spellCheck={false}
         autoComplete="off"
