@@ -18,16 +18,14 @@ export const SnippetManager = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch snippets from Supabase on component mount
-  useEffect(() => {
-    fetchSnippets();
-  }, []);
-
-  const fetchSnippets = async () => {
+  // Add this new function to the SnippetManager component
+  const fetchSnippetsByUserId = async (userId: string) => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('snippets')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -39,6 +37,7 @@ export const SnippetManager = () => {
         code: snippet.code,
         language: snippet.language,
         category: snippet.category,
+        user_id: snippet.user_id,
         createdAt: new Date(snippet.created_at),
         updatedAt: new Date(snippet.updated_at),
       }));
@@ -48,13 +47,44 @@ export const SnippetManager = () => {
       console.error('Error fetching snippets:', error);
       toast({
         title: "Error",
-        description: "Failed to load snippets. Please try again.",
+        description: "Failed to load snippets for the specified user. Please try again.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Modify the existing fetchSnippets to use the new function
+  const fetchSnippets = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to view snippets.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      await fetchSnippetsByUserId(session.user.id);
+    } catch (error) {
+      console.error('Error fetching snippets:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load snippets. Please try again.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  // The existing useEffect remains the same
+  useEffect(() => {
+    fetchSnippets();
+  }, []);
 
   const languages = useMemo(() => {
     const langs = Array.from(new Set(snippets.map(s => s.language))).sort();
@@ -82,6 +112,17 @@ export const SnippetManager = () => {
 
   const handleSave = async (snippetData: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      // debugger;
+      if (!session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to save snippets.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (editingSnippet) {
         // Update existing snippet
         const { error } = await supabase
@@ -117,6 +158,7 @@ export const SnippetManager = () => {
             code: snippetData.code,
             language: snippetData.language,
             category: snippetData.category,
+            user_id: session.user.id,
           }])
           .select()
           .single();
@@ -132,6 +174,7 @@ export const SnippetManager = () => {
           category: data.category,
           createdAt: new Date(data.created_at),
           updatedAt: new Date(data.updated_at),
+          user_id: data.user_id,
         };
 
         setSnippets(prev => [newSnippet, ...prev]);

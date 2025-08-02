@@ -2,35 +2,61 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabase } from '@/hooks/useSupabase';
 
-export default function AuthCallbackPage() {
-    const router = useRouter();
+export default function AuthCallback() {
+  const { supabase } = useSupabase();
+  const router = useRouter();
 
-    useEffect(() => {
-        const handleAuthCallback = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      debugger;
+      if (authError) {
+        console.error('Auth error:', authError);
+        router.push('/');
+        return;
+      }
 
-            if (error) {
-                console.error('Error during auth:', error);
-                router.push('/');
-                return;
-            }
+      if (session?.user) {
+        // Check if user exists in our users table
+        const { data: existingUser, error: userError } = await supabase
+          .from('users')
+          .select()
+          .eq('id', session.user.id)
+          .single();
 
-            if (session) {
-                router.push('/dashboard'); // or wherever you want to redirect after successful login
-            }
-        };
+        if (!existingUser) {
+          // Create new user in our users table
+          debugger;
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: session.user.id,
+                email: session.user.email,
+              }
+            ]);
 
-        handleAuthCallback();
-    }, [router]);
+          if (insertError) {
+            console.error('Error creating user:', insertError);
+          }
+        }
 
-    return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-                <h2 className="text-xl font-semibold mb-2">Authenticating...</h2>
-                <p>Please wait while we complete the authentication process.</p>
-            </div>
-        </div>
-    );
+        // Redirect to dashboard after successful auth and user creation
+        router.push('/dashboard');
+      }
+    };
+
+    handleAuthCallback();
+  }, [supabase, router]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold mb-2">Finalizing Login...</h2>
+        <p className="text-muted-foreground">Please wait while we set up your account.</p>
+      </div>
+    </div>
+  );
 }
