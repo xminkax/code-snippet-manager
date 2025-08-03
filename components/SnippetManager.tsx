@@ -6,9 +6,10 @@ import { Plus, Search, Code, Filter, Loader2 } from "lucide-react";
 import { SnippetCard, Snippet } from "./SnippetCard";
 import { SnippetForm } from "./SnippetForm";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@/integrations/supabase/client";
 
 export const SnippetManager = () => {
+  const supabase = createClient();
   const [snippets, setSnippets] = useState<Snippet[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("all");
