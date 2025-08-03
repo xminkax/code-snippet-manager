@@ -1,13 +1,14 @@
-// components/SnippetListServer.tsx
 import { createClient } from '@/integrations/supabase/server'
-import { Snippet } from '@/lib/types'
 
 export async function getServerSnippets() {
     const supabase = await createClient()
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session?.user) {
-        return { snippets: [], isAuthenticated: false }
+        return {
+            snippets: [],
+            isAuthenticated: false
+        }
     }
 
     const { data: snippets, error } = await supabase
@@ -17,10 +18,14 @@ export async function getServerSnippets() {
         .order('created_at', { ascending: false })
 
     if (error) {
-        throw new Error('Failed to fetch snippets')
+        console.error('Error fetching snippets:', error)
+        return {
+            snippets: [],
+            isAuthenticated: true,
+        }
     }
 
-    const formattedSnippets: Snippet[] = (snippets as any[]).map(snippet => ({
+    const formattedSnippets = snippets.map(snippet => ({
         id: snippet.id,
         title: snippet.title,
         description: snippet.description,
@@ -32,5 +37,14 @@ export async function getServerSnippets() {
         updatedAt: new Date(snippet.updated_at),
     }))
 
-    return { snippets: formattedSnippets, isAuthenticated: true }
+    // Use a Set to merge default values with existing values from snippets
+    const uniqueLanguages = new Set([...snippets.map(s => s.language)])
+    const uniqueCategories = new Set([ ...snippets.map(s => s.category)])
+
+    return {
+        snippets: formattedSnippets,
+        isAuthenticated: true,
+        languages: ['all', ...Array.from(uniqueLanguages).sort()],
+        categories: ['all', ...Array.from(uniqueCategories).sort()]
+    }
 }

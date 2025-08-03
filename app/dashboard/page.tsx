@@ -1,12 +1,16 @@
-// "use client"
-// import { SnippetManager } from "@/components/SnippetManager";
-// import {createServerSupabaseClient} from "@/integrations/supabase/client";
-import { createClient } from '@/integrations/supabase/server'
+// app/page.tsx
+import { getServerSnippets } from '@/components/SnippetListServer'
+import { SnippetManager } from '@/components/SnippetManager'
 
-export default async function DashboardPage() {
-    const supabase = await createClient();
-
-    const session = await supabase.auth.getUser();
-    console.log(session);
-    return <div>lala</div>
+export default async function HomePage() {
+    const { snippets, isAuthenticated, languages, categories } = await getServerSnippets();
+    console.log(languages);
+    return (
+        <SnippetManager
+            initialSnippets={snippets}
+            isAuthenticated={isAuthenticated}
+            initialLanguages={languages}
+            initialCategories={categories}
+        />
+    )
 }
