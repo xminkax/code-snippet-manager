@@ -14,6 +14,27 @@ export type Database = {
     }
     public: {
         Tables: {
+            users: {
+                Row: {
+                    id: string
+                    email: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    id?: string
+                    email: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Update: {
+                    id?: string
+                    email?: string
+                    created_at?: string
+                    updated_at?: string
+                }
+                Relationships: []
+            }
             snippets: {
                 Row: {
                     category: string
@@ -24,6 +45,7 @@ export type Database = {
                     language: string
                     title: string
                     updated_at: string
+                    user_id: string
                 }
                 Insert: {
                     category: string
@@ -34,6 +56,7 @@ export type Database = {
                     language: string
                     title: string
                     updated_at?: string
+                    user_id: string
                 }
                 Update: {
                     category?: string
@@ -44,8 +67,17 @@ export type Database = {
                     language?: string
                     title?: string
                     updated_at?: string
+                    user_id?: string
                 }
-                Relationships: []
+                Relationships: [
+                    {
+                        foreignKeyName: "snippets_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "users"
+                        referencedColumns: ["id"]
+                    }
+                ]
             }
         }
         Views: {
