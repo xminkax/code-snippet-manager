@@ -98,7 +98,12 @@ export const SnippetCard = ({snippet, onEdit, onDelete}: SnippetCardProps) => {
 
             <CardFooter className="pt-0 flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
-          {snippet.updatedAt.toLocaleDateString()}
+                    {snippet.updatedAt
+                        ? new Date(snippet.updatedAt).toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit"})
+                        : ""}
         </span>
                 <div className="flex gap-2">
                     <Button

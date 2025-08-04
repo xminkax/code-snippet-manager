@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CodeEditor } from "./CodeEditor";
-import { Snippet } from "./SnippetCard";
+import { Snippet } from "@/lib/types";
 
 interface SnippetFormProps {
   open: boolean;

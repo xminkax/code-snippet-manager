@@ -4,10 +4,11 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Plus, Search, Code, Filter} from "lucide-react";
-import {SnippetCard, Snippet} from "./SnippetCard";
+import {SnippetCard} from "./SnippetCard";
 import {SnippetForm} from "./SnippetForm";
 import {useToast} from "@/hooks/use-toast";
 import {createClient} from "@/integrations/supabase/client";
+import { Snippet } from "@/lib/types";
 
 interface SnippetManagerProps {
     initialSnippets: Snippet[];
@@ -76,7 +77,10 @@ export const SnippetManager = ({
 
                 setSnippets(prev => prev.map(s =>
                     s.id === editingSnippet.id
-                        ? {...s, ...snippetData, updatedAt: new Date()}
+                        ? {...s, ...snippetData, updatedAt: new Date().toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "2-digit"})}
                         : s
                 ));
                 toast({
@@ -107,9 +111,9 @@ export const SnippetManager = ({
                     code: data.code,
                     language: data.language,
                     category: data.category,
-                    createdAt: new Date(data.created_at),
-                    updatedAt: new Date(data.updated_at),
-                    user_id: data.user_id,
+                    createdAt: data.created_at,
+                    updatedAt: data.updated_at,
+                
                 };
 
                 setSnippets(prev => [newSnippet, ...prev]);
