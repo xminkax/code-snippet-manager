@@ -9,6 +9,7 @@ import {SnippetForm} from "./SnippetForm";
 import {useToast} from "@/hooks/use-toast";
 import {createClient} from "@/integrations/supabase/client";
 import { Snippet } from "@/lib/types";
+import { createSnippetSchema, updateSnippetSchema, CreateSnippetInput } from "@/lib/validation";
 
 interface SnippetManagerProps {
     initialSnippets: Snippet[];
@@ -51,6 +52,21 @@ export const SnippetManager = ({
 
     const handleSave = async (snippetData: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => {
         try {
+            // Validate snippet data with Zod
+            const validationResult = editingSnippet 
+                ? updateSnippetSchema.safeParse({ ...snippetData, id: editingSnippet.id })
+                : createSnippetSchema.safeParse(snippetData);
+
+            if (!validationResult.success) {
+                const errors = validationResult.error.errors.map(err => err.message).join(', ');
+                toast({
+                    title: "Validation Error",
+                    description: errors,
+                    variant: "destructive",
+                });
+                return;
+            }
+
             const {data: {session}} = await supabase.auth.getSession();
             if (!session?.user?.id) {
                 toast({

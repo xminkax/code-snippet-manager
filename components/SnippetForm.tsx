@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CodeEditor } from "./CodeEditor";
 import { Snippet } from "@/lib/types";
+import { createSnippetSchema } from "@/lib/validation";
 
 interface SnippetFormProps {
   open: boolean;
@@ -31,6 +32,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Update form fields when editingSnippet changes
   useEffect(() => {
@@ -40,6 +42,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
       setCode(editingSnippet.code || "");
       setLanguage(editingSnippet.language || "");
       setCategory(editingSnippet.category || "");
+      setErrors({});
     } else if (open && !editingSnippet) {
       // Only reset form when opening for new snippet creation
       setTitle("");
@@ -47,20 +50,40 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
       setCode("");
       setLanguage("");
       setCategory("");
+      setErrors({});
     }
   }, [editingSnippet, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !code.trim() || !language || !category) return;
+    
+    // Clear previous errors
+    setErrors({});
 
-    onSave({
+    // Prepare snippet data
+    const snippetData = {
       title: title.trim(),
-      description: description.trim(),
+      description: description.trim() || null,
       code: code.trim(),
       language,
       category,
-    });
+    };
+
+    // Validate with Zod
+    const validationResult = createSnippetSchema.safeParse(snippetData);
+
+    if (!validationResult.success) {
+      const newErrors: Record<string, string> = {};
+      validationResult.error.errors.forEach((error) => {
+        if (error.path[0]) {
+          newErrors[error.path[0] as string] = error.message;
+        }
+      });
+      setErrors(newErrors);
+      return;
+    }
+
+    onSave(snippetData);
 
     // Reset form
     setTitle("");
@@ -68,6 +91,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
     setCode("");
     setLanguage("");
     setCategory("");
+    setErrors({});
     onOpenChange(false);
   };
 
@@ -93,13 +117,17 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter snippet title"
                 required
+                className={errors.title ? "border-red-500" : ""}
               />
+              {errors.title && (
+                <p className="text-sm text-red-500">{errors.title}</p>
+              )}
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="language">Language *</Label>
               <Select value={language} onValueChange={setLanguage} required>
-                <SelectTrigger>
+                <SelectTrigger className={errors.language ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -110,13 +138,16 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
                   ))}
                 </SelectContent>
               </Select>
+              {errors.language && (
+                <p className="text-sm text-red-500">{errors.language}</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
             <Select value={category} onValueChange={setCategory} required>
-              <SelectTrigger>
+              <SelectTrigger className={errors.category ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -127,6 +158,9 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && (
+              <p className="text-sm text-red-500">{errors.category}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -136,7 +170,11 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description (optional)"
+              className={errors.description ? "border-red-500" : ""}
             />
+            {errors.description && (
+              <p className="text-sm text-red-500">{errors.description}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -146,8 +184,11 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
               onChange={setCode}
               language={language || 'text'}
               placeholder="Enter your code here..."
-              className="min-h-[300px]"
+              className={`min-h-[300px] ${errors.code ? "border-red-500" : ""}`}
             />
+            {errors.code && (
+              <p className="text-sm text-red-500">{errors.code}</p>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
