@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LANGUAGE_OPTIONS, CATEGORY_OPTIONS } from "@/lib/snippetOptions";
 
 // Schema for creating a new snippet (without id, createdAt, updatedAt)
 export const createSnippetSchema = z.object({
@@ -12,12 +13,8 @@ export const createSnippetSchema = z.object({
   code: z.string()
     .min(1, "Code is required")
     .max(10000, "Code must be less than 10,000 characters"),
-  language: z.string()
-    .min(1, "Language is required")
-    .max(50, "Language must be less than 50 characters"),
-  category: z.string()
-    .min(1, "Category is required")
-    .max(50, "Category must be less than 50 characters"),
+  language: z.enum(LANGUAGE_OPTIONS, { required_error: "Language is required" }),
+  category: z.enum(CATEGORY_OPTIONS, { required_error: "Category is required" }),
 });
 
 // Schema for updating a snippet

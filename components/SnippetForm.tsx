@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CodeEditor } from "./CodeEditor";
 import { Snippet } from "@/lib/types";
 import { createSnippetSchema } from "@/lib/validation";
+import { getLanguageOptions, getCategoryOptions } from "@/lib/snippetOptions";
 
 interface SnippetFormProps {
   open: boolean;
@@ -14,17 +15,6 @@ interface SnippetFormProps {
   onSave: (snippet: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => void;
   editingSnippet?: Snippet | null;
 }
-
-const LANGUAGES = [
-  'javascript', 'typescript', 'python', 'java', 'cpp', 'c', 'csharp', 'go', 'rust', 'php',
-  'ruby', 'swift', 'kotlin', 'dart', 'scala', 'r', 'matlab', 'sql', 'html', 'css',
-  'scss', 'json', 'xml', 'yaml', 'bash', 'powershell', 'dockerfile', 'nginx'
-];
-
-const CATEGORIES = [
-  'Frontend', 'Backend', 'Database', 'DevOps', 'Mobile', 'Desktop', 'Algorithm',
-  'Data Structure', 'Utility', 'Configuration', 'Testing', 'Documentation'
-];
 
 export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: SnippetFormProps) => {
   const [title, setTitle] = useState("");
@@ -131,9 +121,9 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
-                  {LANGUAGES.map((lang) => (
-                    <SelectItem key={lang} value={lang}>
-                      {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                  {getLanguageOptions().map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value}>
+                      {lang.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -151,9 +141,9 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
+                {getCategoryOptions().map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
                   </SelectItem>
                 ))}
               </SelectContent>

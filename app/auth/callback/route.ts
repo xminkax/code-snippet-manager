@@ -11,12 +11,13 @@ export async function GET(request: Request) {
     if (code) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+        
         if (!error) {
             // Get the current user after successful authentication
             const { data: { user } } = await supabase.auth.getUser()
             
             if (user) {
-                // Check if user already exists in our users table
+                 // Check if user already exists in our users table
                 const { data: existingUser } = await supabase
                     .from('users')
                     .select('id')
@@ -36,23 +37,41 @@ export async function GET(request: Request) {
                     
                     if (insertError) {
                         console.error('Error creating user:', insertError)
+                    } else {
+                        console.log('User created in database')
                     }
+                } else {
+                    console.log('User already exists in database')
                 }
+            } else {
+                console.error('No user found after authentication')
+            }
+
+            // Improved redirect logic for production
+            const forwardedHost = request.headers.get('x-forwarded-host')
+            const host = request.headers.get('host')
+            const isLocalEnv = process.env.NODE_ENV === 'development'
+            
+            let redirectUrl: string
+            
+            if (isLocalEnv) {
+                // Local development
+                redirectUrl = `${origin}${next}`
+            } else {
+                // Production - use the actual domain
+                const domain = forwardedHost || host || 'www.snippetbox.net'
+                const protocol = request.headers.get('x-forwarded-proto') || 'https'
+                redirectUrl = `${protocol}://${domain}${next}`
             }
             
-            const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            if (isLocalEnv) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-                return NextResponse.redirect(`${origin}${next}`)
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${next}`)
-            } else {
-                return NextResponse.redirect(`${origin}${next}`)
-            }
+            console.log('Redirecting to:', redirectUrl)
+            return NextResponse.redirect(redirectUrl)
+        } else {
+            console.error('Auth error:', error)
         }
     }
 
     // return the user to an error page with instructions
+    console.log('No code provided or auth failed, redirecting to error page')
     return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
