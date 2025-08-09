@@ -59,9 +59,7 @@ export async function GET(request: Request) {
                 redirectUrl = `${origin}${next}`
             } else {
                 // Production - use the actual domain
-                const domain = forwardedHost || host || 'www.snippetbox.net'
-                const protocol = request.headers.get('x-forwarded-proto') || 'https'
-                redirectUrl = `${protocol}://${domain}${next}`
+                redirectUrl = `https://www.snippetbox.net${next}`
             }
             
             console.log('Redirecting to:', redirectUrl)
