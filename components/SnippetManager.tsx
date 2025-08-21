@@ -9,6 +9,9 @@ import {SnippetForm} from "./SnippetForm";
 import {useToast} from "@/hooks/use-toast";
 import {createClient} from "@/integrations/supabase/client";
 import { Snippet } from "@/lib/types";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
+
 import { createSnippetSchema, updateSnippetSchema, CreateSnippetInput } from "@/lib/validation";
 
 interface SnippetManagerProps {
@@ -35,6 +38,23 @@ export const SnippetManager = ({
 
     const languages = initialLanguages;
     const categories = initialCategories;
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+            toast({
+                title: "Logout failed",
+                description: error.message,
+                variant: "destructive",
+            });
+            return;
+        }
+        toast({ title: "Logged out" });
+        router.push("/");
+        router.refresh();
+    };
+
 
     const filteredSnippets = useMemo(() => {
         return snippets.filter(snippet => {
@@ -209,6 +229,15 @@ export const SnippetManager = ({
 
     return (
         <div className="min-h-screen bg-background p-6">
+            {isAuthenticated && (
+                <div className="fixed top-4 right-4 z-50">
+                    <Button variant="outline" size="sm" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log out
+                    </Button>
+                </div>
+            )}
+
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
