@@ -1,5 +1,5 @@
 "use client"
-import {useState, useMemo} from "react";
+import {useState, useMemo, useTransition} from "react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
@@ -11,8 +11,7 @@ import {createClient} from "@/integrations/supabase/client";
 import { Snippet } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-
-import { createSnippetSchema, updateSnippetSchema, CreateSnippetInput } from "@/lib/validation";
+import { deleteSnippet } from "@/app/actions/snippets";
 
 interface SnippetManagerProps {
     initialSnippets: Snippet[];
@@ -35,6 +34,7 @@ export const SnippetManager = ({
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null);
     const {toast} = useToast();
+    const [isPending, startTransition] = useTransition();
 
     const languages = initialLanguages;
     const categories = initialCategories;
@@ -70,103 +70,7 @@ export const SnippetManager = ({
         });
     }, [snippets, searchTerm, selectedLanguage, selectedCategory]);
 
-    const handleSave = async (snippetData: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => {
-        try {
-            // Validate snippet data with Zod
-            const validationResult = editingSnippet 
-                ? updateSnippetSchema.safeParse({ ...snippetData, id: editingSnippet.id })
-                : createSnippetSchema.safeParse(snippetData);
 
-            if (!validationResult.success) {
-                const errors = validationResult.error.errors.map(err => err.message).join(', ');
-                toast({
-                    title: "Validation Error",
-                    description: errors,
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            const {data: {session}} = await supabase.auth.getSession();
-            if (!session?.user?.id) {
-                toast({
-                    title: "Error",
-                    description: "You must be logged in to save snippets.",
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            if (editingSnippet) {
-                const {error} = await supabase
-                    .from('snippets')
-                    .update({
-                        title: snippetData.title,
-                        description: snippetData.description,
-                        code: snippetData.code,
-                        language: snippetData.language,
-                        category: snippetData.category,
-                    })
-                    .eq('id', editingSnippet.id);
-
-                if (error) throw error;
-
-                setSnippets(prev => prev.map(s =>
-                    s.id === editingSnippet.id
-                        ? {...s, ...snippetData, updatedAt: new Date().toLocaleString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "2-digit"})}
-                        : s
-                ));
-                toast({
-                    title: "Snippet updated",
-                    description: "Your code snippet has been updated successfully.",
-                });
-                setEditingSnippet(null);
-            } else {
-                const {data, error} = await supabase
-                    .from('snippets')
-                    .insert([{
-                        title: snippetData.title,
-                        description: snippetData.description,
-                        code: snippetData.code,
-                        language: snippetData.language,
-                        category: snippetData.category,
-                        user_id: session.user.id,
-                    }])
-                    .select()
-                    .single();
-
-                if (error) throw error;
-
-                const newSnippet: Snippet = {
-                    id: data.id,
-                    title: data.title,
-                    description: data.description,
-                    code: data.code,
-                    language: data.language,
-                    category: data.category,
-                    createdAt: data.created_at,
-                    updatedAt: data.updated_at,
-                
-                };
-
-                setSnippets(prev => [newSnippet, ...prev]);
-                toast({
-                    title: "Snippet created",
-                    description: "Your new code snippet has been saved.",
-                });
-            }
-        } catch (error) {
-            console.error('Error saving snippet:', error);
-            toast({
-                title: "Error",
-                description: "Failed to save snippet. Please try again.",
-                variant: "destructive",
-            });
-        }
-    };
 
     const handleEdit = (snippet: Snippet) => {
         setEditingSnippet(snippet);
@@ -174,27 +78,34 @@ export const SnippetManager = ({
     };
 
     const handleDelete = async (id: string) => {
-        try {
-            const {error} = await supabase
-                .from('snippets')
-                .delete()
-                .eq('id', id);
+        startTransition(async () => {
+            try {
+                const result = await deleteSnippet(id);
+                
+                if (result?.error) {
+                    toast({
+                        title: "Error",
+                        description: result.error,
+                        variant: "destructive",
+                    });
+                    return;
+                }
 
-            if (error) throw error;
-
-            setSnippets(prev => prev.filter(s => s.id !== id));
-            toast({
-                title: "Snippet deleted",
-                description: "The code snippet has been removed.",
-            });
-        } catch (error) {
-            console.error('Error deleting snippet:', error);
-            toast({
-                title: "Error",
-                description: "Failed to delete snippet. Please try again.",
-                variant: "destructive",
-            });
-        }
+                // Optimistically update the UI
+                setSnippets(prev => prev.filter(s => s.id !== id));
+                toast({
+                    title: "Snippet deleted",
+                    description: "The code snippet has been removed.",
+                });
+            } catch (error) {
+                console.error('Error deleting snippet:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to delete snippet. Please try again.",
+                    variant: "destructive",
+                });
+            }
+        });
     };
 
     const handleNewSnippet = () => {
@@ -277,7 +188,7 @@ export const SnippetManager = ({
                             </div>
 
                             <div className="flex gap-2">
-                                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                                <Select name="language" value={selectedLanguage} onValueChange={setSelectedLanguage}>
                                     <SelectTrigger className="w-[140px]">
                                         <Filter className="h-4 w-4 mr-2" />
                                         <SelectValue defaultValue="all">
@@ -294,7 +205,7 @@ export const SnippetManager = ({
                                 </Select>
 
 
-                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                <Select name="category" value={selectedCategory} onValueChange={setSelectedCategory}>
                                     <SelectTrigger className="w-[140px]">
                                         <Filter className="h-4 w-4 mr-2" />
                                         <SelectValue defaultValue="all">
@@ -350,7 +261,6 @@ export const SnippetManager = ({
                 <SnippetForm
                     open={isFormOpen}
                     onOpenChange={setIsFormOpen}
-                    onSave={handleSave}
                     editingSnippet={editingSnippet}
                 />
             </div>

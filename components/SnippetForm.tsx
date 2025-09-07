@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,21 +8,24 @@ import { CodeEditor } from "./CodeEditor";
 import { Snippet } from "@/lib/types";
 import { createSnippetSchema } from "@/lib/validation";
 import { getLanguageOptions, getCategoryOptions } from "@/lib/snippetOptions";
+import { createSnippet, updateSnippet } from "@/app/actions/snippets";
+import { useToast } from "@/hooks/use-toast";
 
 interface SnippetFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (snippet: Omit<Snippet, "id" | "createdAt" | "updatedAt">) => void;
   editingSnippet?: Snippet | null;
 }
 
-export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: SnippetFormProps) => {
+export const SnippetForm = ({ open, onOpenChange, editingSnippet }: SnippetFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   // Update form fields when editingSnippet changes
   useEffect(() => {
@@ -44,45 +47,56 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
     }
   }, [editingSnippet, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async (formData: FormData) => {
     // Clear previous errors
     setErrors({});
 
-    // Prepare snippet data
-    const snippetData = {
-      title: title.trim(),
-      description: description.trim() || null,
-      code: code.trim(),
-      language,
-      category,
-    };
-
-    // Validate with Zod
-    const validationResult = createSnippetSchema.safeParse(snippetData);
-
-    if (!validationResult.success) {
-      const newErrors: Record<string, string> = {};
-      validationResult.error.errors.forEach((error) => {
-        if (error.path[0]) {
-          newErrors[error.path[0] as string] = error.message;
+    startTransition(async () => {
+      try {
+        let result;
+        
+        if (editingSnippet) {
+          // Add the snippet ID to the form data for updates
+          formData.append('id', editingSnippet.id);
+          result = await updateSnippet(formData);
+        } else {
+          result = await createSnippet(formData);
         }
-      });
-      setErrors(newErrors);
-      return;
-    }
 
-    onSave(snippetData);
+        if (result?.error) {
+          toast({
+            title: "Error",
+            description: result.error,
+            variant: "destructive",
+          });
+          return;
+        }
 
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setCode("");
-    setLanguage("");
-    setCategory("");
-    setErrors({});
-    onOpenChange(false);
+        // Success
+        toast({
+          title: editingSnippet ? "Snippet updated" : "Snippet created",
+          description: editingSnippet 
+            ? "Your code snippet has been updated successfully."
+            : "Your new code snippet has been saved.",
+        });
+
+        // Reset form and close dialog
+        setTitle("");
+        setDescription("");
+        setCode("");
+        setLanguage("");
+        setCategory("");
+        setErrors({});
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Error saving snippet:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save snippet. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   return (
@@ -97,12 +111,13 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form action={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">Title *</Label>
               <Input
                 id="title"
+                name="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter snippet title"
@@ -116,7 +131,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
             
             <div className="space-y-2">
               <Label htmlFor="language">Language *</Label>
-              <Select value={language} onValueChange={setLanguage} required>
+              <Select name="language" value={language} onValueChange={setLanguage} required>
                 <SelectTrigger className={errors.language ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
@@ -136,7 +151,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
 
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>
-            <Select value={category} onValueChange={setCategory} required>
+            <Select name="category" value={category} onValueChange={setCategory} required>
               <SelectTrigger className={errors.category ? "border-red-500" : ""}>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
@@ -157,6 +172,7 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
             <Label htmlFor="description">Description</Label>
             <Input
               id="description"
+              name="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description (optional)"
@@ -176,20 +192,22 @@ export const SnippetForm = ({ open, onOpenChange, onSave, editingSnippet }: Snip
               placeholder="Enter your code here..."
               className={`min-h-[300px] ${errors.code ? "border-red-500" : ""}`}
             />
+            <input type="hidden" name="code" value={code} />
             {errors.code && (
               <p className="text-sm text-red-500">{errors.code}</p>
             )}
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1">
-              {editingSnippet ? "Update Snippet" : "Create Snippet"}
+            <Button type="submit" className="flex-1" disabled={isPending}>
+              {isPending ? "Saving..." : (editingSnippet ? "Update Snippet" : "Create Snippet")}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="flex-1"
+              disabled={isPending}
             >
               Cancel
             </Button>
