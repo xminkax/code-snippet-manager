@@ -101,9 +101,8 @@ export const SnippetManager = ({
             code: formData.get('code') as string,
             language: formData.get('language') as string,
             category: formData.get('category') as string,
-            user_id: '', // Will be set by server
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         };
 
         // Optimistically add the snippet
@@ -139,7 +138,7 @@ export const SnippetManager = ({
             code: formData.get('code') as string,
             language: formData.get('language') as string,
             category: formData.get('category') as string,
-            updated_at: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
         };
 
         // Optimistically update the snippet
