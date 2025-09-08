@@ -6,18 +6,23 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CodeEditor } from "./CodeEditor";
 import { Snippet } from "@/lib/types";
-import { createSnippetSchema } from "@/lib/validation";
 import { getLanguageOptions, getCategoryOptions } from "@/lib/snippetOptions";
-import { createSnippet, updateSnippet } from "@/app/actions/snippets";
-import { useToast } from "@/hooks/use-toast";
 
 interface SnippetFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingSnippet?: Snippet | null;
+  onCreateSnippet: (formData: FormData) => Promise<{ success: boolean }>;
+  onUpdateSnippet: (formData: FormData, snippet: Snippet) => Promise<{ success: boolean }>;
 }
 
-export const SnippetForm = ({ open, onOpenChange, editingSnippet }: SnippetFormProps) => {
+export const SnippetForm = ({ 
+  open, 
+  onOpenChange, 
+  editingSnippet, 
+  onCreateSnippet, 
+  onUpdateSnippet 
+}: SnippetFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [code, setCode] = useState("");
@@ -25,7 +30,6 @@ export const SnippetForm = ({ open, onOpenChange, editingSnippet }: SnippetFormP
   const [category, setCategory] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
 
   // Update form fields when editingSnippet changes
   useEffect(() => {
@@ -47,6 +51,15 @@ export const SnippetForm = ({ open, onOpenChange, editingSnippet }: SnippetFormP
     }
   }, [editingSnippet, open]);
 
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setCode("");
+    setLanguage("");
+    setCategory("");
+    setErrors({});
+  };
+
   const handleSubmit = async (formData: FormData) => {
     // Clear previous errors
     setErrors({});
@@ -56,45 +69,21 @@ export const SnippetForm = ({ open, onOpenChange, editingSnippet }: SnippetFormP
         let result;
         
         if (editingSnippet) {
-          // Add the snippet ID to the form data for updates
-          formData.append('id', editingSnippet.id);
-          result = await updateSnippet(formData);
+          // Use the optimistic handler from SnippetManager
+          result = await onUpdateSnippet(formData, editingSnippet);
         } else {
-          result = await createSnippet(formData);
+          // Use the optimistic handler from SnippetManager
+          result = await onCreateSnippet(formData);
         }
 
-        if (result?.error) {
-          toast({
-            title: "Error",
-            description: result.error,
-            variant: "destructive",
-          });
-          return;
+        if (result.success) {
+          // Reset form and close dialog on success
+          resetForm();
+          onOpenChange(false);
         }
-
-        // Success
-        toast({
-          title: editingSnippet ? "Snippet updated" : "Snippet created",
-          description: editingSnippet 
-            ? "Your code snippet has been updated successfully."
-            : "Your new code snippet has been saved.",
-        });
-
-        // Reset form and close dialog
-        setTitle("");
-        setDescription("");
-        setCode("");
-        setLanguage("");
-        setCategory("");
-        setErrors({});
-        onOpenChange(false);
       } catch (error) {
-        console.error('Error saving snippet:', error);
-        toast({
-          title: "Error",
-          description: "Failed to save snippet. Please try again.",
-          variant: "destructive",
-        });
+        // Error handling and rollback is handled by SnippetManager
+        console.error('Form submission error:', error);
       }
     });
   };

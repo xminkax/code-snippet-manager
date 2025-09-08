@@ -1,17 +1,17 @@
 "use client"
-import {useState, useMemo, useTransition} from "react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {Plus, Search, Code, Filter} from "lucide-react";
-import {SnippetCard} from "./SnippetCard";
-import {SnippetForm} from "./SnippetForm";
-import {useToast} from "@/hooks/use-toast";
-import {createClient} from "@/integrations/supabase/client";
+import { useState, useMemo, useTransition, useOptimistic } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, Code, Filter } from "lucide-react";
+import { SnippetCard } from "./SnippetCard";
+import { SnippetForm } from "./SnippetForm";
+import { useToast } from "@/hooks/use-toast";
+import { createClient } from "@/integrations/supabase/client";
 import { Snippet } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { deleteSnippet } from "@/app/actions/snippets";
+import { deleteSnippet, createSnippet, updateSnippet } from "@/app/actions/snippets";
 
 interface SnippetManagerProps {
     initialSnippets: Snippet[];
@@ -20,25 +20,48 @@ interface SnippetManagerProps {
     initialCategories: string[];
 }
 
+type OptimisticAction = 
+  | { type: 'add'; snippet: Snippet }
+  | { type: 'update'; snippet: Snippet }
+  | { type: 'delete'; id: string };
+
 export const SnippetManager = ({
-                                   initialSnippets,
-                                   isAuthenticated,
-                                   initialLanguages,
-                                   initialCategories
-                               }: SnippetManagerProps) => {
+    initialSnippets,
+    isAuthenticated,
+    initialLanguages,
+    initialCategories
+}: SnippetManagerProps) => {
     const supabase = createClient();
-    const [snippets, setSnippets] = useState<Snippet[]>(initialSnippets);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState<string>("all");
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null);
-    const {toast} = useToast();
+    const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
 
     const languages = initialLanguages;
     const categories = initialCategories;
     const router = useRouter();
+
+    // useOptimistic for managing optimistic updates
+    const [optimisticSnippets, addOptimisticAction] = useOptimistic(
+        initialSnippets,
+        (state: Snippet[], action: OptimisticAction) => {
+            switch (action.type) {
+                case 'add':
+                    return [action.snippet, ...state];
+                case 'update':
+                    return state.map(snippet => 
+                        snippet.id === action.snippet.id ? action.snippet : snippet
+                    );
+                case 'delete':
+                    return state.filter(snippet => snippet.id !== action.id);
+                default:
+                    return state;
+            }
+        }
+    );
 
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
@@ -55,9 +78,8 @@ export const SnippetManager = ({
         router.refresh();
     };
 
-
     const filteredSnippets = useMemo(() => {
-        return snippets.filter(snippet => {
+        return optimisticSnippets.filter(snippet => {
             const matchesSearch = searchTerm === "" ||
                 snippet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 snippet.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,9 +90,83 @@ export const SnippetManager = ({
 
             return matchesSearch && matchesLanguage && matchesCategory;
         });
-    }, [snippets, searchTerm, selectedLanguage, selectedCategory]);
+    }, [optimisticSnippets, searchTerm, selectedLanguage, selectedCategory]);
 
+    const handleCreateSnippet = async (formData: FormData) => {
+        const tempId = crypto.randomUUID();
+        const optimisticSnippet: Snippet = {
+            id: tempId,
+            title: formData.get('title') as string,
+            description: formData.get('description') as string || null,
+            code: formData.get('code') as string,
+            language: formData.get('language') as string,
+            category: formData.get('category') as string,
+            user_id: '', // Will be set by server
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
 
+        // Optimistically add the snippet
+        addOptimisticAction({ type: 'add', snippet: optimisticSnippet });
+
+        try {
+            const result = await createSnippet(formData);
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+            
+            toast({
+                title: "Snippet created",
+                description: "Your new code snippet has been saved.",
+            });
+            
+            return { success: true };
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Failed to create snippet",
+                variant: "destructive",
+            });
+            throw error; // This will cause the optimistic update to rollback
+        }
+    };
+
+    const handleUpdateSnippet = async (formData: FormData, snippet: Snippet) => {
+        const optimisticSnippet: Snippet = {
+            ...snippet,
+            title: formData.get('title') as string,
+            description: formData.get('description') as string || null,
+            code: formData.get('code') as string,
+            language: formData.get('language') as string,
+            category: formData.get('category') as string,
+            updated_at: new Date().toISOString(),
+        };
+
+        // Optimistically update the snippet
+        addOptimisticAction({ type: 'update', snippet: optimisticSnippet });
+
+        try {
+            formData.append('id', snippet.id);
+            const result = await updateSnippet(formData);
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+            
+            toast({
+                title: "Snippet updated",
+                description: "Your code snippet has been updated successfully.",
+            });
+            
+            return { success: true };
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: error instanceof Error ? error.message : "Failed to update snippet",
+                variant: "destructive",
+            });
+            throw error; // This will cause the optimistic update to rollback
+        }
+    };
 
     const handleEdit = (snippet: Snippet) => {
         setEditingSnippet(snippet);
@@ -78,21 +174,17 @@ export const SnippetManager = ({
     };
 
     const handleDelete = async (id: string) => {
+        // Optimistically remove the snippet
+        addOptimisticAction({ type: 'delete', id });
+
         startTransition(async () => {
             try {
                 const result = await deleteSnippet(id);
                 
                 if (result?.error) {
-                    toast({
-                        title: "Error",
-                        description: result.error,
-                        variant: "destructive",
-                    });
-                    return;
+                    throw new Error(result.error);
                 }
 
-                // Optimistically update the UI
-                setSnippets(prev => prev.filter(s => s.id !== id));
                 toast({
                     title: "Snippet deleted",
                     description: "The code snippet has been removed.",
@@ -101,9 +193,10 @@ export const SnippetManager = ({
                 console.error('Error deleting snippet:', error);
                 toast({
                     title: "Error",
-                    description: "Failed to delete snippet. Please try again.",
+                    description: error instanceof Error ? error.message : "Failed to delete snippet",
                     variant: "destructive",
                 });
+                // Note: The optimistic update will automatically rollback on error
             }
         });
     };
@@ -204,14 +297,12 @@ export const SnippetManager = ({
                                     </SelectContent>
                                 </Select>
 
-
                                 <Select name="category" value={selectedCategory} onValueChange={setSelectedCategory}>
                                     <SelectTrigger className="w-[140px]">
                                         <Filter className="h-4 w-4 mr-2" />
                                         <SelectValue defaultValue="all">
                                             {selectedCategory === "all" ? "All Categories" : selectedCategory}
                                         </SelectValue>
-
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map(cat => (
@@ -229,7 +320,7 @@ export const SnippetManager = ({
                 {/* Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <div className="text-2xl font-bold text-card-foreground">{snippets.length}</div>
+                        <div className="text-2xl font-bold text-card-foreground">{optimisticSnippets.length}</div>
                         <div className="text-sm text-muted-foreground">Total Snippets</div>
                     </div>
                     <div className="bg-card border border-border rounded-lg p-4">
@@ -257,11 +348,14 @@ export const SnippetManager = ({
                         ))}
                     </div>
                 )}
+
                 {/* Form Dialog */}
                 <SnippetForm
                     open={isFormOpen}
                     onOpenChange={setIsFormOpen}
                     editingSnippet={editingSnippet}
+                    onCreateSnippet={handleCreateSnippet}
+                    onUpdateSnippet={handleUpdateSnippet}
                 />
             </div>
         </div>
